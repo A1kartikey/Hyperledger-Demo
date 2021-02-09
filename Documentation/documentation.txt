@@ -1,0 +1,266 @@
+=============================== To generate crypto-config for 3 orgs ==============================
+cd /supply-chain
+
+./bin/cryptogen generate --config=./crypto-config.yaml
+
+================================ To generate config tx  ============================================================
+
+./bin/configtxgen -profile TwoOrgsOrdererGenesis -channelID byfn-sys-channel -outputBlock ./channel-artifacts/genesis.block
+
+================================ To generate raft based genesis block  ==============================================
+
+clear
+================================ To generate channel tx file =========================================================
+
+export CHANNEL_NAME=mychannel  
+./bin/configtxgen -profile TwoOrgsChannel -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID $CHANNEL_NAME
+
+================================ To generate anchor peer update for Org1 ==============================================
+
+export CHANNEL_NAME=mychannel  
+./bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org1MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org1MSP
+
+================================ To generate anchor peer update for Org2  ==============================================
+
+export CHANNEL_NAME=mychannel  
+./bin/configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org2MSPanchors.tx -channelID $CHANNEL_NAME -asOrg Org2MSP
+
+================================ To remove all _sk files =================================================================
+ 
+find $PWD -type f -name *_sk -execdir mv {} key \;
+
+================================ To create orderer container  ============================================================
+
+docker-compose -f orderer-peer.yaml up -d 
+
+================================= To create peers for Org1 ===============================================================
+
+docker-compose -f org1-peer.yaml up -d 
+
+================================= To create peer for Org2  ===============================================================
+
+docker-compose -f org2-peer.yaml up -d 
+
+================================== To create CA for both the organisations ================================================
+
+docker-compose -f ca-org.yaml up -d
+
+================================== To create cli  =========================================================================
+
+docker-compose -f cli.yaml up -d 
+
+================================== Check docker containers ================================================================
+
+docker ps -a 
+
+================================== To intract with cli  ===================================================================
+
+docker exec -it cli bash  
+
+=================================== To create channel by org1  =====================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+export CHANNEL_NAME=mychannel
+
+peer channel create -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/channel.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+========================================== To join peer0 in channel of org1  =========================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer channel join -b mychannel.block
+
+=========================================== To join peer1 in channel of org1  ============================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer1.org1.example.com:8051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
+
+peer channel join -b mychannel.block
+
+=========================================== To join peer0 in channel of org2  ===============================================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer0.org2.example.com:9051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+
+peer channel join -b mychannel.block
+
+============================================ To join peer1 in channel of org2  =========================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer1.org2.example.com:10051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+
+peer channel join -b mychannel.block
+
+============================================= To update anchor peer of org1 =====================================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer channel update -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org1MSPanchors.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+============================================= To update anchor peer of org2  ==============================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer0.org2.example.com:9051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+
+peer channel update -o orderer.example.com:7050 -c $CHANNEL_NAME -f ./channel-artifacts/Org2MSPanchors.tx --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+=============================================== Install chaincode on peer0 org1   =====================================================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+
+================================================ Install chaincode peer1   org1  =================================================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer1.org1.example.com:8051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
+
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+
+================================================ Install chaincode peer0  org 2  ========================================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer0.org2.example.com:9051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+
+================================================ Install chaincode peer1 org1  =============================================================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer1.org2.example.com:10051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+
+peer chaincode install -n mycc -v 1.0 -p github.com/chaincode/chaincode_example02/go/
+
+================================================ Instantiate chaincode ==================================================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc -l node -v 1.0 -c '{"Args":["init","a", "100", "b","200"]}' -P "OR ('Org1MSP.peer','Org2MSP.peer')"
+
+================================================ Invoke chaincode  ============================================================================================================
+
+export CHANNEL_NAME=mychannel
+peer chaincode invoke -o orderer.example.com:7050 --tls true --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n mycc --peerAddresses peer0.org1.example.com:7051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses peer0.org2.example.com:9051 --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"Args":["invoke","a","b","10"]}'
+
+================================================ Query chaincode ===============================================================================================================
+
+export CHANNEL_NAME=mychannel
+peer chaincode query -C $CHANNEL_NAME -n mycc -c '{"Args":["query","b"]}'
+
+
+
+==============================================================================================================================================================================================
+                                                                                USECASE - 1
+==============================================================================================================================================================================================
+
+
+
+=========================== Install peer0 org1   ========================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer chaincode install -n usecase2  -v 1.0 -l golang -p github.com/chaincode/chaincode1/
+
+=========================== Install peer1 org1  ===========================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer1.org1.example.com:8051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
+
+peer chaincode install -n usecase2  -v 1.0 -l golang -p github.com/chaincode/chaincode1/
+
+=========================== Install peer0 org2  =============================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer0.org2.example.com:9051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+
+peer chaincode install -n usecase2  -v 1.0 -l golang -p github.com/chaincode/chaincode1/
+
+=========================== Install peer1 org2 =====================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer1.org2.example.com:10051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+
+peer chaincode install -n usecase2  -v 1.0 -l golang -p github.com/chaincode/chaincode1/
+
+=========================== export channel Name =============================================
+
+export CHANNEL_NAME=mychannel
+
+echo $CHANNEL_NAME
+
+=========================== Instantiate =====================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase2 -v 1.0 -c '{"Args":["init"]}' -P "OR ('Org1MSP.peer','Org2MSP.peer')"
+
+===========================  Upgrade ========================================================
+
+peer chaincode upgrade -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase2 -v 1.0 -c '{"Args":["init"]}' -P "OR ('Org1MSP.peer','Org2MSP.peer')"
+
+===========================  Invoke Init ====================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase2 -c '{"Args":["initShipment","SHIP_002","IN-TRANSIT","F_Name","L_Name","email@email.com","10000","10","76"]}'
+
+===========================  Invoke setFuel =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase2 -c '{"Args":["setFuel","SHIP_002","14"]}'
+
+===========================  Invoke setTemp =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase2 -c '{"Args":["setTemp","SHIP_002","15"]}'
+
+===========================  Invoke shipmentDelivered =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase2 -c '{"Args":["shipmentDelivered","SHIP_003"]}'
+
+=========================== getHistoryForShipment ============================================
+
+peer chaincode query -C $CHANNEL_NAME -n usecase2 -c '{"Args":["getHistoryForShipment", "SHIP_002"]}'
+
+============================ read shipment  ===================================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase2 -c '{"Args":["readShipment","SHIP_002"]}'
+

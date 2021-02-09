@@ -1,0 +1,68 @@
+{
+  "ProductId": "PRO_001",
+  "ProductRawMaterial": [
+      {
+          "RawMaterial": [
+              "milk 1"
+          ],
+          "RawMaterialSupplier": {
+              "CityName": "CityName",
+              "EmailId": "Supplier1@email.com",
+              "EntityAddress": "EntityAddress",
+              "EntityName": "EntityName",
+              "EntityStackholderType": "Supplier",
+              "EntityStorageUnitAddress": "EntityStorageUnitAddress",
+              "EntityType": "EntityType",
+              "NameOfStorageUnit": "NameOfStorageUnit",
+              "PhoneNo": "PhoneNo",
+              "State": "State",
+              "StorageUnitCityUnit": "StorageUnitCityUnit",
+              "StorageUnitState": "StorageUnitState",
+              "StorageUnitZipcode": 500001,
+              "ZipCode": 829116
+          }
+      },
+      {
+          "RawMaterial": [
+              "milk 2,milk 3, milk 4 "
+          ],
+          "RawMaterialSupplier": {
+              "CityName": "CityName",
+              "EmailId": "Supplier2@email.com",
+              "EntityAddress": "EntityAddress",
+              "EntityName": "EntityName",
+              "EntityStackholderType": "Supplier",
+              "EntityStorageUnitAddress": "EntityStorageUnitAddress",
+              "EntityType": "EntityType",
+              "NameOfStorageUnit": "NameOfStorageUnit",
+              "PhoneNo": "PhoneNo",
+              "State": "State",
+              "StorageUnitCityUnit": "StorageUnitCityUnit",
+              "StorageUnitState": "StorageUnitState",
+              "StorageUnitZipcode": 500001,
+              "ZipCode": 829116
+          }
+      },
+      {
+          "RawMaterial": [
+              "milk 2,milk 3, milk 4 "
+          ],
+          "RawMaterialSupplier": {
+              "CityName": "CityName",
+              "EmailId": "Supplier2@email.com",
+              "EntityAddress": "EntityAddress",
+              "EntityName": "EntityName",
+              "EntityStackholderType": "Supplier",
+              "EntityStorageUnitAddress": "EntityStorageUnitAddress",
+              "EntityType": "EntityType",
+              "NameOfStorageUnit": "NameOfStorageUnit",
+              "PhoneNo": "PhoneNo",
+              "State": "State",
+              "StorageUnitCityUnit": "StorageUnitCityUnit",
+              "StorageUnitState": "StorageUnitState",
+              "StorageUnitZipcode": 500001,
+              "ZipCode": 829116
+          }
+      }
+  ]
+}

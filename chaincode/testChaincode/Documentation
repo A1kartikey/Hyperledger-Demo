@@ -1,0 +1,103 @@
+=========================== Install peer0 org1   ========================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer chaincode install -n usecase1  -v 1.0 -l golang -p github.com/chaincode/testChaincode
+
+=========================== Install peer1 org1  ===========================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+CORE_PEER_ADDRESS=peer1.org1.example.com:8051
+CORE_PEER_LOCALMSPID="Org1MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
+
+peer chaincode install -n usecase1  -v 1.0 -l golang -p github.com/chaincode/testChaincode
+
+=========================== Install peer0 org2  =============================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer0.org2.example.com:9051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+
+peer chaincode install -n usecase1  -v 1.0 -l golang -p github.com/chaincode/testChaincode
+
+=========================== Install peer1 org2 =====================================================================
+
+CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp 
+CORE_PEER_ADDRESS=peer1.org2.example.com:10051 
+CORE_PEER_LOCALMSPID="Org2MSP"
+CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+
+peer chaincode install -n usecase1  -v 1.0 -l golang -p github.com/chaincode/testChaincode
+
+=========================== export channel Name =============================================
+
+export CHANNEL_NAME=mychannel
+
+echo $CHANNEL_NAME
+
+=========================== Instantiate =====================================================
+
+    CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+    CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+    CORE_PEER_LOCALMSPID="Org1MSP"
+    CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+    peer chaincode instantiate -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -v 1.0 -c '{"Args":["init"]}' -P "OR ('Org1MSP.peer','Org2MSP.peer')"
+
+===========================  Upgrade ========================================================
+
+peer chaincode upgrade -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -v 1.2 -c '{"Args":["init"]}' -P "OR ('Org1MSP.peer','Org2MSP.peer')"
+
+===========================  Invoke Entity 1 ====================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["enrollEntity","TypeOf","Name","EmailId","PhoneNo","Address","City","State","ZipCode","StorageUnitsName","StorageUnitsAddress","StorageUnitsCity","StorageUnitsState","StorageUnitsZipCode","StorageUnitsLatitude","StorageUnitsLongitude","SystemTool","AuthenticationType","HostAddress","UserName","Password","Port","FileName","ProductId","ProductName","ProductType","ProductCategory","ProductDescription","ProductImage"]}'
+
+===========================  Invoke Supplier 2 ====================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["enrollEntity","Supplier","EntityType","EntityName","Supplier2@email.com","PhoneNo","EntityAddress","CityName","State","829116","NameOfStorageUnit","EntityStorageUnitAddress","StorageUnitCityUnit","StorageUnitState","500001"]}'
+
+
+=========================== get supplier  ========================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["getHistoryForShipment","Supplier@email.com"]}'
+
+===========================  Invoke Manufacturer =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["enrollEntity","Manufacturer","EntityType","EntityName","Manufacturer@email.com","PhoneNo","EntityAddress","CityName","State","829116","NameOfStorageUnit","EntityStorageUnitAddress","StorageUnitCityUnit","StorageUnitState","500001"]}'
+
+===========================  Invoke product 1 =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["enrollProduct","PRO_1","milk","Supplier@email.com"]}'
+
+===========================  Invoke product 2 =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["enrollProduct","PRO_2","milk","Supplier@email.com"]}'
+
+===========================  Invoke add to product 1 =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["addToProduct","PRO_1","milk1","Supplier@email.com"]}'
+
+===========================  Invoke add to product 2 =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["addToProduct","PRO_2","milk1","Supplier@email.com"]}'
+
+===========================  Invoke add Manufacturer =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["makeAPackage","1","2","Manufacturer@email.com"]}'
+
+===========================  Invoke shipmentDelivered =================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["shipmentDelivered","SHIP_003"]}'
+
+=========================== getHistoryForShipment ============================================
+
+peer chaincode query -C $CHANNEL_NAME -n usecase1 -c '{"Args":["getHistoryForShipment", "SHIP_002"]}'
+
+============================ read shipment  ===================================================================
+
+peer chaincode invoke -o orderer.example.com:7050 --tls --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C $CHANNEL_NAME -n usecase1 -c '{"Args":["readShipment","SHIP_002"]}'

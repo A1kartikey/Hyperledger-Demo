@@ -1,0 +1,140 @@
+======================================== To start the network ==========================
+
+To start the network look at Documentation at /supply-chain/Documentation
+
+========================================= To register user in Org1 and generate JWT token  ============================================
+
+curl -s -X POST http://localhost:4000/users -H "content-type: application/x-www-form-urlencoded" -d 'username=Jim&orgName=Org1'
+
+============================================== To register user in Org2 and generate JWT token  =======================================
+
+curl -s -X POST http://localhost:4000/users -H "content-type: application/x-www-form-urlencoded" -d 'username=Bob&orgName=Org2'
+
+============================================ To create channel by Org1  ========================================================================
+
+(Path is taken from app.js : ApplicationModule )
+
+curl -s -X POST \
+  http://localhost:4000/channels \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json" \
+  -d '{
+	"channelName":"mychannel",
+	"channelConfigPath":"../../channel-artifacts/channel.tx"
+}'
+
+=================================== To join  channel by Org1 =====================================================================================
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/peers \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json" \
+  -d '{
+	"peers": ["peer0.org1.example.com","peer1.org1.example.com"]
+}'
+
+=================================== To join channel by Org2 ========================================================================================
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/peers \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkJvYiIsIm9yZ05hbWUiOiJPcmcyIiwiaWF0IjoxNTk0NTMxMTU4LCJleHAiOjE2MjYwNjcxNTh9.1uSqEACf3iUv-8i_UfMiDm7cDEojTWf5O5GNWQEcJ5E" \
+  -H "content-type: application/json" \
+  -d '{
+	"peers": ["peer0.org2.example.com","peer1.org2.example.com"]
+}'
+
+===================================== Install chaincode in Peers of Org1  ============================================================================
+(Path is taken from ApplicationModule)
+
+curl -s -X POST \
+  http://localhost:4000/chaincodes \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json" \
+  -d '{
+	"peers": ["peer0.org1.example.com","peer1.org1.example.com"],
+	"chaincodeName":"mycc",
+	"chaincodePath":"github.com/example_cc/go",
+	"chaincodeType": "golang",
+	"chaincodeVersion":"v0"
+}'
+
+=================================== Install chaincode in peers of Org 2 ========================================================================================
+
+curl -s -X POST \
+  http://localhost:4000/chaincodes \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkJvYiIsIm9yZ05hbWUiOiJPcmcyIiwiaWF0IjoxNTk0NTMxMTU4LCJleHAiOjE2MjYwNjcxNTh9.1uSqEACf3iUv-8i_UfMiDm7cDEojTWf5O5GNWQEcJ5E" \
+  -H "content-type: application/json" \
+  -d '{
+	"peers": ["peer0.org2.example.com","peer1.org2.example.com"],
+	"chaincodeName":"mycc",
+	"chaincodePath":"github.com/example_cc/go",
+	"chaincodeType": "golang",
+	"chaincodeVersion":"v0"
+}'
+
+==================================== Instantiate chaincode  =======================================================================================================
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/chaincodes \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json" \
+  -d '{
+	"chaincodeName":"mycc",
+	"chaincodeVersion":"v0",
+	"chaincodeType": "golang",
+	"args":["a","100","b","200"]
+}'
+
+==================================== Invoke chaincode  ==============================================================================================================
+
+curl -s -X POST \
+  http://localhost:4000/channels/mychannel/chaincodes/mycc \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json" \
+  -d '{
+	"peers": ["peer0.org1.example.com","peer0.org2.example.com"],
+	"fcn":"invoke",
+	"args":["a","b","10"]
+}'
+
+===================================== Query chaincode  ========================================================================================================================
+
+curl -s -X GET \
+  "http://localhost:4000/channels/mychannel/chaincodes/mycc?peer=peer0.org1.example.com&fcn=query&args=%5B%22a%22%5D" \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json"
+
+====================================== Query chaincode info =====================================================================================================================
+
+curl -s -X GET \
+  "http://localhost:4000/channels/mychannel?peer=peer0.org1.example.com" \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json"
+
+========================================== Query installed chaincode on a peer  ====================================================================================================
+
+curl -s -X GET \
+  "http://localhost:4000/chaincodes?peer=peer0.org1.example.com&type=installed" \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json"
+
+============================================ Get Instantiated chaincode on a peer  ===========================================================================================================
+
+curl -s -X GET \
+  "http://localhost:4000/chaincodes?peer=peer0.org1.example.com&type=instantiated" \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json"
+
+============================================ Query peer channels ================================================================================================================================
+
+curl -s -X GET \
+  "http://localhost:4000/channels?peer=peer0.org1.example.com" \
+  -H "authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkppbSIsIm9yZ05hbWUiOiJPcmcxIiwiaWF0IjoxNTk0NTMxMDU1LCJleHAiOjE2MjYwNjcwNTV9.UC6pEVmM_rGR7EqqaWA1kmvjWH7xpsYk7HWRZvbPfMQ" \
+  -H "content-type: application/json"
+
+================================================ stop the network ==================================================================================================================================
+
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images | grep dev | awk '{print $3}')
+rm -rf fabric-client-kv-org[1-2]
+
